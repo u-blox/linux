@@ -217,6 +217,10 @@ static void wl1271_rx_streaming_timer(unsigned long data)
 /* wl->mutex must be taken */
 void wl12xx_rearm_tx_watchdog_locked(struct wl1271 *wl)
 {
+	/* Disable TX monitor in PLT mode */
+	if (wl->plt)
+		return;
+
 	/* if the watchdog is not armed, don't do anything */
 	if (wl->tx_allocated_blocks == 0)
 		return;
