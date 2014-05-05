@@ -286,6 +286,48 @@ static void __init am335x_evmsk_legacy_init(void)
 {
 	legacy_init_wl12xx(WL12XX_REFCLOCK_38, 0, 31);
 }
+
+static void __init am335x_elin_w160_legacy_init(void)
+{
+	int res;
+
+	/*
+	 * The ODIN-W160 has internal pull-ups on WL_EN and BT_EN, so we only
+	 * need to initialise these low in order to satisfy the power-up
+	 * requirements of a >10ms pulse on one of these pins.
+	 *
+	 * Also note that the pinmux may not have been initialised when
+	 * pdata-quirks is executed.
+	 */
+	res = gpio_request_one(83, GPIOF_OUT_INIT_LOW, "bt_en");
+	if (res) {
+		pr_err("%s - failed to request bt_en\n", __func__);
+	} else {
+		res = gpio_export(83, false);
+		if (res)
+			pr_err("%s - failed to export bt_en\n", __func__);
+	}
+
+	legacy_init_wl12xx(WL12XX_REFCLOCK_26, 0, 19);
+}
+
+static void __init am335x_elin_w160_evk_legacy_init(void)
+{
+	int res;
+
+	am335x_elin_w160_legacy_init();
+
+	/*
+	 * FIXME: These should be handled by the PHY driver.
+	 */
+	res = gpio_request_one(116, GPIOF_OUT_INIT_HIGH, "eth_phy0_reset");
+	if (res)
+		pr_err("%s - failed to request eth_phy0_reset\n", __func__);
+
+	res = gpio_request_one(115, GPIOF_OUT_INIT_HIGH, "eth_phy1_reset");
+	if (res)
+		pr_err("%s - failed to request eth_phy1_reset\n", __func__);
+}
 #endif
 
 #ifdef CONFIG_SOC_OMAP5
@@ -386,6 +428,7 @@ static struct pdata_init pdata_quirks[] __initdata = {
 #endif
 #ifdef CONFIG_SOC_AM33XX
 	{ "ti,am335x-evmsk", am335x_evmsk_legacy_init, },
+	{ "u-blox,elin-w160-evk", am335x_elin_w160_evk_legacy_init, },
 #endif
 #ifdef CONFIG_SOC_OMAP5
 	{ "ti,omap5-uevm", omap5_uevm_legacy_init, },

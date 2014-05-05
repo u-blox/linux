@@ -1,0 +1,395 @@
+/*
+ * Device Tree for u-blox ELIN-W160 System-on-Module
+ *
+ * Copyright (C) 2014 Johan Hovold <johan@hovoldconsulting.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+
+#include "am33xx.dtsi"
+
+/ {
+	model = "AM335x u-blox ELIN-W160";
+	compatible = "u-blox,elin-w160", "ti,am33xx";
+
+	cpus {
+		cpu@0 {
+			cpu0-supply = <&dcdc2_reg>;
+			operating-points = <
+				/* kHz    uV */
+				800000  1300000
+				600000  1112000
+				300000   969000
+			>;
+		};
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x80000000 0x10000000>;	/* 256 MB */
+	};
+
+	gpio-leds-som {
+		compatible = "gpio-leds";
+		pinctrl-names = "default";
+		pinctrl-0 = <&gpio_leds_som_pins>;
+
+		led@0 {
+			label = "elin-w160:yellow:heartbeat";
+			gpios = <&gpio2 0 GPIO_ACTIVE_LOW>;
+			linux,default-trigger = "heartbeat";
+		};
+	};
+
+	vwlan_en_reg: regulator-vwlan-en {
+		compatible = "regulator-fixed";
+		regulator-name = "vwlan_en";
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+		gpio = <&gpio2 22 0>;
+		enable-active-high;
+		startup-delay-us = <70000>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&wlan_enable_pins>;
+	};
+};
+
+&am33xx_pinmux {
+	pinctrl-names = "default";
+	pinctrl-0 = <
+		&bluetooth_pins
+		&clkout2_pins
+		&wlan_pins
+	>;
+
+	bluetooth_pins: pinmux_bluetooth_pins {
+		pinctrl-single,pins = <
+			0xe4 (PIN_INPUT | MUX_MODE7)		/* lcd_hsync.gpio2_23	HOST_WAKEUP */
+			0xe8 (PIN_OUTPUT | MUX_MODE7)		/* lcd_pclk.gpio2_24	RADIO_WAKEUP */
+			0x138 (PIN_OUTPUT | MUX_MODE7)		/* mii1_rxd2.gpio2_19	BT_EN */
+		>;
+	};
+
+	clkout2_pins: pinmux_clkout2_pins {
+		pinctrl-single,pins = <
+			0x1b4 (PIN_OUTPUT | MUX_MODE3)		/* xdma_event_intr1.clkout2 */
+		>;
+	};
+
+	config_mem_pins: pinmux_config_mem_pins {
+		pinctrl-single,pins = <
+			0x48 (PIN_OUTPUT | MUX_MODE7)		/* gpmc_a2.gpio1_18	I2CMEM_WC */
+		>;
+	};
+
+	cpsw_port1_pins: pinmux_cpsw_port1_pins {
+		pinctrl-single,pins = <
+			0x10c (PIN_INPUT_PULLDOWN | MUX_MODE1)	/* mii1_crs.rmii1_crs_dv */
+			0x110 (PIN_INPUT_PULLDOWN | MUX_MODE1)	/* mii1_rx_er.rmii1_rxerr */
+			0x114 (PIN_OUTPUT_PULLDOWN | MUX_MODE1)	/* mii1_tx_en.rmii1_txen */
+			0x124 (PIN_OUTPUT_PULLDOWN | MUX_MODE1)	/* mii1_txd1.rmii1_txd1 */
+			0x128 (PIN_OUTPUT_PULLDOWN | MUX_MODE1)	/* mii1_txd0.rmii1_txd0 */
+			0x13c (PIN_INPUT_PULLDOWN | MUX_MODE1)	/* mii1_rxd1.rmii1_rxd1 */
+			0x140 (PIN_INPUT_PULLDOWN | MUX_MODE1)	/* mii1_rxd0.rmii1_rxd0 */
+			0x144 (PIN_INPUT_PULLDOWN | MUX_MODE0)	/* rmii1_ref_clk.rmii1_refclk */
+		>;
+	};
+
+	cpsw_port1_pins_sleep: pinmux_cpsw_port1_pins_sleep {
+		pinctrl-single,pins = <
+			0x10c (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x110 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x114 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x124 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x128 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x13c (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x140 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x144 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+		>;
+	};
+
+	cpsw_port2_pins: pinmux_cpsw_port2_pins {
+		pinctrl-single,pins = <
+			0x40 (PIN_OUTPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a0.rmii2_txen */
+			0x50 (PIN_OUTPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a4.rmii2_txd1 */
+			0x54 (PIN_OUTPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a5.rmii2_txd0 */
+			0x64 (PIN_INPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a9.rmii2_crs_dv */
+			0x68 (PIN_INPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a10.rmii2_rxd1 */
+			0x6c (PIN_INPUT_PULLDOWN | MUX_MODE3)	/* gpmc_a11.rmii2_rxd0 */
+			0x108 (PIN_INPUT_PULLDOWN | MUX_MODE1)	/* mmii1_col.rmii2_refclk */
+		>;
+	};
+
+	cpsw_port2_pins_sleep: pinmux_cpsw_port2_pins_sleep {
+		pinctrl-single,pins = <
+			0x40 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x50 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x54 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x64 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x68 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x6c (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x108 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+		>;
+	};
+
+	gpio_leds_som_pins: pinmux_gpio_leds_som_pins {
+		pinctrl-single,pins = <
+			0x88 (PIN_OUTPUT | MUX_MODE7)		/* gpmc_csn3.gpio2_0 */
+		>;
+	};
+
+	gpmc_pins: pinmux_gpmc_pins {
+		pinctrl-single,pins = <
+			0x0 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad0.gpmc_ad0 */
+			0x4 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad1.gpmc_ad1 */
+			0x8 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad2.gpmc_ad2 */
+			0xc (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad3.gpmc_ad3 */
+			0x10 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad4.gpmc_ad4 */
+			0x14 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad5.gpmc_ad5 */
+			0x18 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad6.gpmc_ad6 */
+			0x1c (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_ad7.gpmc_ad7 */
+			0x70 (PIN_INPUT_PULLUP | MUX_MODE0)	/* gpmc_wait0.gpmc_wait0 */
+			0x74 (PIN_INPUT_PULLUP | MUX_MODE7)	/* gpmc_wpn.gpio0_30 */
+			0x7c (PIN_OUTPUT | MUX_MODE0)		/* gpmc_csn0.gpmc_csn0  */
+			0x90 (PIN_OUTPUT | MUX_MODE0)		/* gpmc_advn_ale.gpmc_advn_ale */
+			0x94 (PIN_OUTPUT | MUX_MODE0)		/* gpmc_oen_ren.gpmc_oen_ren */
+			0x98 (PIN_OUTPUT | MUX_MODE0)		/* gpmc_wen.gpmc_wen */
+			0x9c (PIN_OUTPUT | MUX_MODE0)		/* gpmc_be0n_cle.gpmc_be0n_cle */
+		>;
+	};
+
+	i2c0_pins: pinmux_i2c0_pins {
+		pinctrl-single,pins = <
+			0x188 (PIN_INPUT | MUX_MODE0)		/* i2c0_sda.i2c0_sda */
+			0x18c (PIN_INPUT | MUX_MODE0)		/* i2c0_scl.i2c0_scl */
+		>;
+	};
+
+	mdio_pins: pinmux_mdio_pins {
+		pinctrl-single,pins = <
+			0x148 (PIN_INPUT_PULLUP | SLEWCTRL_FAST | MUX_MODE0)	/* mdio_data.mdio_data */
+			0x14c (PIN_OUTPUT_PULLUP | MUX_MODE0)			/* mdio_clk.mdio_clk */
+		>;
+	};
+
+	mdio_pins_sleep: pinmux_mdio_pins_sleep {
+		pinctrl-single,pins = <
+			0x148 (PIN_INPUT_PULLDOWN | MUX_MODE7)
+			0x14c (PIN_INPUT_PULLDOWN | MUX_MODE7)
+		>;
+	};
+
+	mmc1_pins: pinmux_mmc1_pins {
+		pinctrl-single,pins = <
+			0xf0 (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_dat3.mmc0_dat3 */
+			0xf4 (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_dat2.mmc0_dat2 */
+			0xf8 (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_dat1.mmc0_dat1 */
+			0xfc (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_dat0.mmc0_dat0 */
+			0x100 (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_clk.mmc0_clk */
+			0x104 (PIN_INPUT_PULLUP | MUX_MODE0)	/* mmc0_cmd.mmc0_cmd */
+		>;
+	};
+
+	mmc2_clk_cmd_dat0_pins: pinmux_mmc2_clk_cmd_dat0_pins {
+		pinctrl-single,pins = <
+			0x20 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad8.mmc1_dat0 */
+			0x80 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_csn1.mmc1_clk */
+			0x84 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_csn2.mmc1_cmd */
+		>;
+	};
+
+	mmc2_dat1_3_pins: pinmux_mmc2_dat1_3_pins {
+		pinctrl-single,pins = <
+			0x24 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad9.mmc1_dat1 */
+			0x28 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad10.mmc1_dat2 */
+			0x2c (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad11.mmc1_dat3 */
+		>;
+	};
+
+	mmc2_dat4_7_pins: pinmux_mmc2_dat4_7_pins {
+		pinctrl-single,pins = <
+			0x30 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad12.mmc1_dat4 */
+			0x34 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad13.mmc1_dat5 */
+			0x38 (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad14.mmc1_dat6 */
+			0x3c (PIN_INPUT_PULLUP | MUX_MODE2)	/* gpmc_ad15.mmc1_dat7 */
+		>;
+	};
+
+	uart5_pins: pinmux_uart5_pins {
+		pinctrl-single,pins = <
+			0xc0 (PIN_OUTPUT | MUX_MODE4)		/* lcd_data8.uart5_txd */
+			0xc4 (PIN_INPUT_PULLUP | MUX_MODE4)	/* lcd_data9.uart5_rxd */
+			0xd8 (PIN_INPUT_PULLUP | MUX_MODE6)	/* lcd_data14.uart5_ctsn */
+			0xdc (PIN_OUTPUT | MUX_MODE6)		/* lcd_data15.uart5_rtsn */
+		>;
+	};
+
+	wlan_pins: pinmux_wlan_pins {
+		pinctrl-single,pins = <
+			0x1b0 (PIN_INPUT | MUX_MODE7)		/* xdma_event_intr0.gpio0_19	WL_IRQ */
+		>;
+	};
+
+	wlan_enable_pins: pinmux_wlan_enable_pins {
+		pinctrl-single,pins = <
+			0xe0 (PIN_OUTPUT | MUX_MODE7)		/* lcd_vsync.gpio2_22	WL_EN */
+		>;
+	};
+};
+
+&elm {
+	status = "okay";
+};
+
+&gpmc {
+	ranges = <0 0 0 0x01000000>;	/* 16MB GPMC partition */
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&gpmc_pins>;
+
+	status = "okay";
+
+	gpmc_nand: nand@0,0 {
+		reg = <0 0 4>;			/* device IO registers */
+		ti,nand-ecc-opt = "bch8";
+		ti,elm-id = <&elm>;
+		nand-bus-width = <8>;
+
+		gpmc,device-width = <1>;
+		gpmc,sync-clk-ps = <0>;
+		gpmc,cs-on-ns = <0>;
+		gpmc,cs-rd-off-ns = <44>;
+		gpmc,cs-wr-off-ns = <44>;
+		gpmc,adv-on-ns = <6>;
+		gpmc,adv-rd-off-ns = <34>;
+		gpmc,adv-wr-off-ns = <44>;
+		gpmc,we-on-ns = <0>;
+		gpmc,we-off-ns = <40>;
+		gpmc,oe-on-ns = <0>;
+		gpmc,oe-off-ns = <54>;
+		gpmc,access-ns = <64>;
+		gpmc,rd-cycle-ns = <82>;
+		gpmc,wr-cycle-ns = <82>;
+		gpmc,wait-on-read;
+		gpmc,wait-on-write;
+		gpmc,bus-turnaround-ns = <0>;
+		gpmc,cycle2cycle-delay-ns = <0>;
+		gpmc,clk-activation-ns = <0>;
+		gpmc,wait-monitoring-ns = <0>;
+		gpmc,wr-access-ns = <40>;
+		gpmc,wr-data-mux-bus-ns = <0>;
+
+		#address-cells = <1>;
+		#size-cells = <1>;
+	};
+};
+
+&i2c0 {
+	clock-frequency = <100000>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&i2c0_pins>;
+	status = "okay";
+
+	tps: tps@24 {
+		reg = <0x24>;
+	};
+
+	/* ODIN-W160 EEPROM */
+	eeprom@51 {
+		compatible = "at,24c64";
+		reg = <0x51>;
+		pagesize = <32>;
+	};
+
+	/* Configuration memory */
+	eeprom@52 {
+		compatible = "at,24c64";
+		reg = <0x52>;
+		pagesize = <32>;
+	};
+};
+
+/* ODIN-W160 WLAN SDIO */
+&mmc1 {
+	non-removable;
+	bus-width = <4>;
+	cap-power-off-card;
+
+	vmmc-supply = <&vwlan_en_reg>;
+
+	pinctrl-names = "default";
+	pinctrl-0 = <&mmc1_pins>;
+	status = "okay";
+};
+
+/* ODIN-W160 Bluetooth UART */
+&uart5 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&uart5_pins>;
+	status = "okay";
+};
+
+&rtc {
+	system-power-controller;
+};
+
+#include "tps65217.dtsi"
+
+&tps {
+	/*
+	 * Set the "ti,pmic-shutdown-controller" property to have the PMIC
+	 * enter OFF rather than SLEEP mode on power off. Note that this
+	 * will prevent wake up on RTC alarm.
+	 */
+
+	regulators {
+		dcdc1_reg: regulator@0 {
+			regulator-name = "vdds_ddr";
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		dcdc2_reg: regulator@1 {
+			regulator-name = "vdd_mpu";
+			regulator-min-microvolt = <925000>;
+			regulator-max-microvolt = <1325000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		dcdc3_reg: regulator@2 {
+			regulator-name = "vdd_core";
+			regulator-min-microvolt = <925000>;
+			regulator-max-microvolt = <1150000>;
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		ldo1_reg: regulator@3 {
+			regulator-name = "vdd_rtc";
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		ldo2_reg: regulator@4 {
+			regulator-name = "vdd_3v3aux";
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		ldo3_reg: regulator@5 {
+			regulator-name = "vdd_1v8";
+			regulator-boot-on;
+			regulator-always-on;
+		};
+
+		ldo4_reg: regulator@6 {
+			regulator-name = "vdd_3v3a";
+			regulator-boot-on;
+			regulator-always-on;
+		};
+	};
+};
