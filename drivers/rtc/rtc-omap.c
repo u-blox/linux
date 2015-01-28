@@ -112,7 +112,9 @@
 #define OMAP_RTC_IRQWAKEEN_ALARM_WAKEEN	BIT(1)
 
 /* OMAP_RTC_PMIC bit fields: */
-#define OMAP_RTC_PMIC_POWER_EN_EN	BIT(16)
+#define OMAP_RTC_PMIC_EXT_WAKEUP_EN		BIT(0)
+#define OMAP_RTC_PMIC_EXT_WAKEUP_ACTIVE_LOW	BIT(4)
+#define OMAP_RTC_PMIC_POWER_EN_EN		BIT(16)
 
 /* OMAP_RTC_KICKER values */
 #define	KICK0_VALUE			0x83e70b13
@@ -124,6 +126,7 @@ struct omap_rtc_device_type {
 	bool has_irqwakeen;
 	bool has_pmic_mode;
 	bool has_power_up_reset;
+	bool has_ext_wakeup;
 };
 
 struct omap_rtc {
@@ -391,8 +394,17 @@ static void omap_rtc_power_off(void)
 	unsigned long now;
 	u32 val;
 
-	/* enable pmic_power_en control */
 	val = rtc_readl(rtc, OMAP_RTC_PMIC_REG);
+
+	/*
+	 * If ext_wakeup0 is available enable it as it is the only external
+	 * wakeup source.
+	 */
+	if (rtc->type->has_ext_wakeup)
+		val |= OMAP_RTC_PMIC_EXT_WAKEUP_EN |
+			OMAP_RTC_PMIC_EXT_WAKEUP_ACTIVE_LOW;
+
+	/* enable pmic_power_en control */
 	rtc_writel(rtc, OMAP_RTC_PMIC_REG, val | OMAP_RTC_PMIC_POWER_EN_EN);
 
 	/* set alarm two seconds from now */
@@ -449,6 +461,7 @@ static const struct omap_rtc_device_type omap_rtc_am3352_type = {
 	.has_kicker	= true,
 	.has_irqwakeen	= true,
 	.has_pmic_mode	= true,
+	.has_ext_wakeup	= true,
 };
 
 static const struct omap_rtc_device_type omap_rtc_da830_type = {
